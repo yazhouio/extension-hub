@@ -3,6 +3,7 @@
 分为服务端和客户端，分别负责文件的发送和接收。
 
 大体流程如图。
+![image](https://github.com/yazhouio/plugin-hub/assets/17949154/e1b30011-6bcb-430f-8d08-3c365bb22ec5)
 
 
 客户端和服务端通信均使用 grpc。
