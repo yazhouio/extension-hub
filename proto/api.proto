@@ -1,0 +1,62 @@
+syntax = "proto3";
+package abi;
+
+import "error.proto";
+
+option swift_prefix = "Abi";
+
+message CheckTarRequest {
+    string tarHash = 1;
+}
+
+message CheckTarResponse {
+    AppError error = 1;
+}
+
+message UploadTarRequest {
+    string tarHash = 1;
+} 
+
+message UploadTarResponse {
+    AppError error = 1;
+    string uploadUrl = 2;
+}
+
+message DownloadTarRequest {
+    string tarHash = 1;
+}
+
+message DownloadTarResponse {
+    string downloadUrl = 1;
+}
+
+message UnTarRequest {
+    string tarHash = 1;
+    string targetDir = 2;
+}
+
+
+
+message UnTarResponse {
+    AppError error = 1;
+}
+
+message ReplaceTextRequest {
+    string targetDir = 2;
+    string oldText = 3;
+    string newText = 4;
+    repeated string suffix = 5;	
+
+}
+
+message ReplaceTextResponse {
+    AppError error = 1;
+}
+
+service PluginHub {
+    rpc CheckTar(CheckTarRequest) returns (CheckTarResponse) {};
+    rpc UploadTar(UploadTarRequest) returns (UploadTarResponse) {};
+    rpc DownloadTar(DownloadTarRequest) returns (DownloadTarResponse) {};
+    rpc UnTar(UnTarRequest) returns (UnTarResponse) {};
+    rpc ReplaceText(ReplaceTextRequest) returns (ReplaceTextResponse) {};
+}
