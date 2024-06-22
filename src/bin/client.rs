@@ -9,7 +9,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut client = PluginHubClient::connect("http://127.0.0.1:50051").await?;
 
     let request = tonic::Request::new(abi::CheckTarRequest {
-        tar_hash: "Tonic".into(),
+        tar_hash: "aaa".into(),
+        file_path: "bbb".into(),
     });
 
     let response = client.check_tar(request).await?;

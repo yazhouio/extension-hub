@@ -7,19 +7,27 @@ option swift_prefix = "Abi";
 
 message CheckTarRequest {
     string tarHash = 1;
+    string file_path = 2;
 }
 
+
 message CheckTarResponse {
+    message CheckTarData {}
     AppError error = 1;
+    CheckTarData data = 2;
 }
 
 message UploadTarRequest {
     string tarHash = 1;
+    optional UnTarRequest unTar = 2;
 } 
 
 message UploadTarResponse {
+    message UploadTarData {
+        string uploadUrl = 1;
+    }
     AppError error = 1;
-    string uploadUrl = 2;
+    UploadTarData data = 2;
 }
 
 message DownloadTarRequest {
@@ -53,10 +61,25 @@ message ReplaceTextResponse {
     AppError error = 1;
 }
 
+message ClearTarDirRequest {}
+
+message ClearTarDirResponse {
+    AppError error = 1;
+}
+
+message ClearDirRequest {
+    string dir = 1;
+}
+
+message ClearDirResponse {
+    AppError error = 1;
+}
 service PluginHub {
     rpc CheckTar(CheckTarRequest) returns (CheckTarResponse) {};
     rpc UploadTar(UploadTarRequest) returns (UploadTarResponse) {};
     rpc DownloadTar(DownloadTarRequest) returns (DownloadTarResponse) {};
     rpc UnTar(UnTarRequest) returns (UnTarResponse) {};
     rpc ReplaceText(ReplaceTextRequest) returns (ReplaceTextResponse) {};
+    rpc ClearTarDir(ClearTarDirRequest) returns (ClearTarDirResponse) {};
+    rpc ClearDir(ClearDirRequest) returns (ClearDirResponse) {};
 }

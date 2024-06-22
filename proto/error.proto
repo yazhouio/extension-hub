@@ -8,7 +8,7 @@ message AppError {
   // Error code, shall be 1:1 mapping with `error` crate
   AppErrorCode code = 1;
   // Error message
-  string message = 2;
+  optional string message = 2;
 }
 
 // error code
@@ -20,4 +20,13 @@ enum AppErrorCode {
   // converted errors
   ProstDecodeError = 200;
   ProstEncodeError = 201;
+
+  TarNotExist = 1000;
+  FileNotExist = 1001;
+  DirNotExist = 1002;
+  ConfigNotExist = 1003;
+  ConfigureError = 1004;
+  IOError = 1005;
+
+  Other = 9999;
 }
