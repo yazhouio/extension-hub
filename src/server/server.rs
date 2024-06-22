@@ -1,11 +1,14 @@
 use anyhow::{anyhow, Result};
 use dashmap::{DashMap, DashSet};
 use plugin_hub::error::HubError;
+use plugin_hub::macros::AppError;
 use plugin_hub::{abi::plugin_hub as abi, abi::plugin_hub::plugin_hub_server::PluginHub};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::path::PathBuf;
 use std::result::Result::Ok;
+use std::sync::Arc;
+use tokio::time::{sleep, Duration};
 use tonic::{Request, Response, Status};
 
 extern crate plugin_hub;
@@ -30,7 +33,7 @@ impl Default for MyPluginHubConfig {
 pub struct MyPluginHubContext {
     pub tar_map: DashMap<String, String>,
     pub item_dir_map: DashMap<String, DashSet<String>>,
-    pub upload_path_map: DashMap<String, abi::UploadTarRequest>,
+    pub upload_path_map: Arc<DashMap<String, abi::UploadTarRequest>>,
 }
 
 #[derive(Debug, Default)]
@@ -84,11 +87,17 @@ impl MyPluginHub {
             .take(64)
             .map(char::from)
             .collect();
+
         self.context
             .upload_path_map
-            .insert(upload_path.clone(), upload_tar_request)
-            .ok_or(anyhow!("Can not insert upload path"))?;
-        dbg!(self);
+            .insert(upload_path.clone(), upload_tar_request);
+        let path_clone = upload_path.clone();
+        let upload_path_map = self.context.upload_path_map.clone();
+        tokio::task::spawn(async move {
+            let sleep_time = Duration::from_secs(30);
+            sleep(sleep_time).await;
+            upload_path_map.remove(&path_clone);
+        });
         Ok(upload_path)
     }
 }
@@ -106,7 +115,7 @@ impl PluginHub for MyPluginHub {
 
         match self.check_tar_dir(&tar_hash, &file_path) {
             Ok(_) => Ok(abi::CheckTarResponse::success_response(None)),
-            Err(e) => Err(e.into()),
+            Err(e) => Ok(AppError::from(e).into()),
         }
     }
 
@@ -125,7 +134,6 @@ impl PluginHub for MyPluginHub {
         &self,
         request: Request<abi::DownloadTarRequest>,
     ) -> Result<Response<abi::DownloadTarResponse>, Status> {
-        println!("Got a request: {:?}", request);
         let reply = abi::DownloadTarResponse {
             download_url: "Hello, world!".into(),
         };
@@ -136,7 +144,6 @@ impl PluginHub for MyPluginHub {
         &self,
         request: Request<abi::UnTarRequest>,
     ) -> Result<Response<abi::UnTarResponse>, Status> {
-        println!("Got a request: {:?}", request);
         let reply = abi::UnTarResponse { error: None };
         Ok(Response::new(reply))
     }
@@ -145,7 +152,6 @@ impl PluginHub for MyPluginHub {
         &self,
         request: Request<abi::ReplaceTextRequest>,
     ) -> Result<Response<abi::ReplaceTextResponse>, Status> {
-        println!("Got a request: {:?}", request);
         let reply = abi::ReplaceTextResponse { error: None };
         Ok(Response::new(reply))
     }
@@ -154,7 +160,6 @@ impl PluginHub for MyPluginHub {
         &self,
         request: Request<abi::ClearTarDirRequest>,
     ) -> Result<Response<abi::ClearTarDirResponse>, Status> {
-        println!("Got a request: {:?}", request);
         let reply = abi::ClearTarDirResponse { error: None };
         Ok(Response::new(reply))
     }
@@ -163,7 +168,6 @@ impl PluginHub for MyPluginHub {
         &self,
         request: Request<abi::ClearDirRequest>,
     ) -> Result<Response<abi::ClearDirResponse>, Status> {
-        println!("Got a request: {:?}", request);
         let reply = abi::ClearDirResponse { error: None };
         Ok(Response::new(reply))
     }

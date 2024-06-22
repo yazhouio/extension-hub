@@ -1,3 +1,5 @@
+#![feature(duration_constructors)]
+
 use tonic::transport::Server;
 
 use plugin_hub::abi::plugin_hub::plugin_hub_server::PluginHubServer;
