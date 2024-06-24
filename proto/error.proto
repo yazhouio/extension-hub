@@ -27,6 +27,7 @@ enum AppErrorCode {
   ConfigNotExist = 1003;
   ConfigureError = 1004;
   IOError = 1005;
+  DirHasExist = 1006;
 
   Other = 9999;
 }

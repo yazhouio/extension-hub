@@ -1,7 +1,7 @@
 syntax = "proto3";
 package abi;
 
-import "error.proto";
+// import "error.proto";
 
 option swift_prefix = "Abi";
 
@@ -12,9 +12,7 @@ message CheckTarRequest {
 
 
 message CheckTarResponse {
-    message CheckTarData {}
-    AppError error = 1;
-    CheckTarData data = 2;
+    // AppError error = 1;
 }
 
 message UploadTarRequest {
@@ -26,7 +24,7 @@ message UploadTarResponse {
     message UploadTarData {
         string uploadUrl = 1;
     }
-    AppError error = 1;
+    // AppError error = 1;
     UploadTarData data = 2;
 }
 
@@ -35,18 +33,23 @@ message DownloadTarRequest {
 }
 
 message DownloadTarResponse {
-    string downloadUrl = 1;
+    message DownloadTarData {
+        string downloadUrl = 1;
+    }
+    // AppError error = 1;
+    DownloadTarData data = 2;
 }
 
 message UnTarRequest {
     string tarHash = 1;
     string targetDir = 2;
+    optional bool overwrite = 3;
 }
 
 
 
 message UnTarResponse {
-    AppError error = 1;
+    // AppError error = 1;
 }
 
 message ReplaceTextRequest {
@@ -58,13 +61,13 @@ message ReplaceTextRequest {
 }
 
 message ReplaceTextResponse {
-    AppError error = 1;
+    // AppError error = 1;
 }
 
 message ClearTarDirRequest {}
 
 message ClearTarDirResponse {
-    AppError error = 1;
+    // AppError error = 1;
 }
 
 message ClearDirRequest {
@@ -72,8 +75,9 @@ message ClearDirRequest {
 }
 
 message ClearDirResponse {
-    AppError error = 1;
+    // AppError error = 1;
 }
+
 service PluginHub {
     rpc CheckTar(CheckTarRequest) returns (CheckTarResponse) {};
     rpc UploadTar(UploadTarRequest) returns (UploadTarResponse) {};

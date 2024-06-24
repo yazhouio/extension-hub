@@ -17,7 +17,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     greeter
         .context
         .tar_map
-        .insert("aaa".to_owned(), "bbb".to_owned());
+        .insert("aaa".to_owned(), "devops.tar.gz".to_owned());
 
     Server::builder()
         .add_service(PluginHubServer::new(greeter))
