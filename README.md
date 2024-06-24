@@ -9,8 +9,8 @@
 ### server 提供功能
 | TODO | 功能 | |
 | --- | --- | --- |
-| <ul><li>- [ ] </li></ul> | 根据 tar hash 判断是否存在 | grpc |
-| <ul><li>- [ ] </li></ul> | 根据配置，获取上传地址 | grpc |
+| <ul><li>- [x] </li></ul> | 根据 tar hash 判断是否存在 | grpc |
+| <ul><li>- [x] </li></ul> | 根据配置，获取上传地址 | grpc |
 | <ul><li>- [ ] </li></ul> | http 上传 tar 包 | http |
 | <ul><li>- [ ] </li></ul> | http 下载 tar 包 | http |
 | <ul><li>- [ ] </li></ul> | 请求解压 tar 包到指定目录 | grpc |
