@@ -15,3 +15,7 @@
 | <ul><li>- [ ] </li></ul> | http 下载 tar 包 | http |
 | <ul><li>- [x] </li></ul> | 请求解压 tar 包到指定目录 | grpc |
 | <ul><li>- [x] </li></ul> | 指定文件夹文本替换 | grpc |
+| <ul><li>- [ ] </li></ul> | 未使用文件清理｜ grpc ｜
+
+## TODO: server 额外功能（待定）
+在 server 启动时，调用 ks 接口，重启所有 client，注册文件。
