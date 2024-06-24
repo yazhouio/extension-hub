@@ -2,6 +2,7 @@ use anyhow::Result;
 use dashmap::{DashMap, DashSet};
 use flate2::read::GzDecoder;
 use plugin_hub::error::HubError;
+use plugin_hub::text_replace;
 // use plugin_hub::macros::AppError;
 use plugin_hub::{abi::plugin_hub as abi, abi::plugin_hub::plugin_hub_server::PluginHub};
 use rand::distributions::Alphanumeric;
@@ -139,15 +140,45 @@ impl MyPluginHub {
         };
         let file_name = self.get_tar_hash(tar_hash)?;
         let tar_gz = std::fs::File::open(self.config.tar_dir_path.join(&file_name))?;
-        // .map_err(|e| HubError::IOError(e))?;
 
         let tar: GzDecoder<_> = GzDecoder::new(tar_gz);
         let mut archive = Archive::new(tar);
         if path.exists() && overwrite {
             std::fs::remove_dir_all(&path)?;
         };
-        archive.unpack(".")?;
+        archive.unpack(path)?;
         Ok(())
+    }
+
+    pub fn text_replace_request_to_setting(
+        &self,
+        request: abi::ReplaceTextRequest,
+    ) -> Result<text_replace::Setting, HubError> {
+        let abi::ReplaceTextRequest {
+            target_dir,
+            old_text,
+            new_text,
+            suffix,
+        } = request;
+
+        let source_path = self.config.base_dir.join(target_dir);
+        let output_path = source_path.clone();
+        Ok(text_replace::Setting {
+            old_web_prefix: old_text,
+            new_web_prefix: new_text,
+            source_path: source_path.to_string_lossy().to_string(),
+            output_path: output_path.to_string_lossy().to_string(),
+            exclude_path: None,
+            file_types: Some(suffix),
+        })
+    }
+
+    pub fn text_replace_by_request(
+        &self,
+        request: abi::ReplaceTextRequest,
+    ) -> Result<(), HubError> {
+        let config = self.text_replace_request_to_setting(request)?;
+        Ok(config.text_replace()?)
     }
 }
 
@@ -215,10 +246,14 @@ impl PluginHub for MyPluginHub {
 
     async fn replace_text(
         &self,
-        _request: Request<abi::ReplaceTextRequest>,
+        request: Request<abi::ReplaceTextRequest>,
     ) -> Result<Response<abi::ReplaceTextResponse>, Status> {
-        let reply = abi::ReplaceTextResponse {};
-        Ok(Response::new(reply))
+        let request = request.into_inner();
+        let reply = self.text_replace_by_request(request);
+        match reply {
+            Ok(_) => Ok(abi::ReplaceTextResponse::success_response()),
+            Err(e) => Err(e.into()),
+        }
     }
 
     async fn clear_tar_dir(
