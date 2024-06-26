@@ -6,8 +6,8 @@ pub mod plugin_hub {
 }
 
 response_new!(CheckTarResponse);
-response_new!(UploadTarResponse, upload_tar_response::UploadTarData);
-response_new!(DownloadTarResponse, download_tar_response::DownloadTarData);
+response_new!(UploadTarResponse, UploadTarData);
+response_new!(DownloadTarResponse, DownloadTarData);
 response_new!(ReplaceTextResponse);
 response_new!(UnTarResponse);
 response_new!(ClearDirResponse);

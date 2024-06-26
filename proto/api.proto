@@ -20,10 +20,11 @@ message UploadTarRequest {
     optional UnTarRequest unTar = 2;
 } 
 
+message UploadTarData {
+    string uploadUrl = 1;
+}
+
 message UploadTarResponse {
-    message UploadTarData {
-        string uploadUrl = 1;
-    }
     // AppError error = 1;
     UploadTarData data = 2;
 }
@@ -32,10 +33,11 @@ message DownloadTarRequest {
     string tarHash = 1;
 }
 
+message DownloadTarData {
+    string downloadUrl = 1;
+}
+
 message DownloadTarResponse {
-    message DownloadTarData {
-        string downloadUrl = 1;
-    }
     // AppError error = 1;
     DownloadTarData data = 2;
 }

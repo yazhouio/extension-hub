@@ -7,12 +7,15 @@ use plugin_hub::text_replace;
 use plugin_hub::{abi::plugin_hub as abi, abi::plugin_hub::plugin_hub_server::PluginHub};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use std::io::Read;
+use std::io::Write;
 use std::path::PathBuf;
 use std::result::Result::Ok;
 use std::sync::Arc;
 use tar::Archive;
 use tokio::time::{sleep, Duration};
 use tonic::{Request, Response, Status};
+use tracing::debug;
 
 extern crate plugin_hub;
 
@@ -34,10 +37,10 @@ impl Default for MyPluginHubConfig {
 
 #[derive(Debug, Default)]
 pub struct MyPluginHubContext {
-    pub tar_map: DashMap<String, String>,
+    pub tar_set: DashSet<String>,
     pub item_dir_map: DashMap<String, DashSet<String>>,
     pub upload_path_map: Arc<DashMap<String, abi::UploadTarRequest>>,
-    pub download_path_map: DashMap<String, abi::DownloadTarRequest>,
+    pub download_path_map: Arc<DashMap<String, abi::DownloadTarRequest>>,
 }
 
 #[derive(Debug, Default)]
@@ -48,17 +51,11 @@ pub struct MyPluginHub {
 
 impl MyPluginHub {
     pub fn get_tar_hash(&self, tar_hash: &str) -> Result<String, HubError> {
-        if self.context.tar_map.contains_key(tar_hash) {
-            let relative_path = self
-                .context
-                .tar_map
-                .get(tar_hash)
-                .ok_or(HubError::TarNotExist(tar_hash.to_owned()))?
-                .to_owned();
-
-            let path = self.config.tar_dir_path.join(&relative_path);
+        if self.context.tar_set.contains(tar_hash) {
+            let tar_file = format!("{}.tar.gz", tar_hash);
+            let path = self.config.tar_dir_path.join(&tar_file);
             if path.exists() {
-                return Ok(relative_path);
+                return Ok(tar_hash.to_owned());
             };
         }
         Err(HubError::TarNotExist(tar_hash.to_owned()))
@@ -134,11 +131,16 @@ impl MyPluginHub {
         item_dir: &str,
         overwrite: bool,
     ) -> Result<(), HubError> {
+        debug!(
+            "un_tar_to_dir: tar_hash={}, item_dir={}, overwrite={}",
+            tar_hash, item_dir, overwrite
+        );
         let path = self.config.base_dir.join(item_dir);
         if path.exists() && !overwrite {
             return Err(HubError::DirHasExist(item_dir.to_owned()));
         };
-        let file_name = self.get_tar_hash(tar_hash)?;
+        let mut file_name = self.get_tar_hash(tar_hash)?;
+        file_name.push_str(".tar.gz");
         let tar_gz = std::fs::File::open(self.config.tar_dir_path.join(&file_name))?;
 
         let tar: GzDecoder<_> = GzDecoder::new(tar_gz);
@@ -147,6 +149,7 @@ impl MyPluginHub {
             std::fs::remove_dir_all(&path)?;
         };
         archive.unpack(path)?;
+        self.add_tar_dir(tar_hash, item_dir);
         Ok(())
     }
 
@@ -180,6 +183,67 @@ impl MyPluginHub {
         let config = self.text_replace_request_to_setting(request)?;
         Ok(config.text_replace()?)
     }
+
+    #[warn(clippy::unwrap_or_default)]
+    pub fn add_tar_dir(&self, tar_hash: &str, item_dir: &str) {
+        let set = self
+            .context
+            .item_dir_map
+            .entry(tar_hash.to_owned())
+            .or_insert(DashSet::new());
+        set.insert(item_dir.to_owned());
+    }
+    pub async fn upload_tar(&self, hash: &str, bytes: &[u8]) -> Result<(), HubError> {
+        let Some(_request) = self.context.upload_path_map.get(hash) else {
+            return Err(HubError::ResourceNotFount);
+        };
+        if !self.config.tar_dir_path.exists() {
+            std::fs::create_dir_all(&self.config.tar_dir_path)?;
+        };
+        let request = _request.clone();
+        let file_name = format!("{}.tar.gz", request.tar_hash);
+        let path = self.config.tar_dir_path.join(&file_name);
+        if !path.exists() {
+            let request = _request.clone();
+            let hasher = blake3::hash(bytes);
+            let hash_str = hasher.to_hex().to_string();
+            if hash_str != request.clone().tar_hash {
+                return Err(HubError::HashNotMatch(request.clone().tar_hash, hash_str));
+            };
+            let mut file = std::fs::File::create(path)?;
+            file.write_all(bytes)?;
+        };
+        let request = _request.clone();
+        self.context
+            .tar_set
+            .insert(_request.clone().tar_hash.to_owned());
+        let Some(un_tar_request) = request.un_tar else {
+            return Ok(());
+        };
+        let request = _request.clone();
+        self.un_tar_to_dir(
+            &request.tar_hash.clone(),
+            &un_tar_request.target_dir,
+            un_tar_request.overwrite.unwrap_or(false),
+        )
+        .await
+    }
+
+    pub fn download_tar(&self, hash: &str) -> Result<(String, Vec<u8>), HubError> {
+        let Some(_request) = self.context.download_path_map.get(hash) else {
+            return Err(HubError::ResourceNotFount);
+        };
+        let request = _request.clone();
+        let tar_file_name = format!("{}.tar.gz", request.clone().tar_hash);
+        let path = self.config.tar_dir_path.join(tar_file_name);
+        if !path.exists() {
+            return Err(HubError::TarNotExist(request.clone().tar_hash));
+        };
+        let mut file = std::fs::File::open(path)?;
+        let mut bytes = Vec::new();
+        file.read_to_end(&mut bytes)?;
+        Ok((request.clone().tar_hash, bytes))
+    }
 }
 
 #[tonic::async_trait]
@@ -209,7 +273,7 @@ impl PluginHub for MyPluginHub {
         let request = request.into_inner();
         let reply = self.generate_upload_url(request)?;
         Ok(abi::UploadTarResponse::success_response(Some(
-            abi::upload_tar_response::UploadTarData { upload_url: reply },
+            abi::UploadTarData { upload_url: reply },
         )))
     }
 
@@ -220,7 +284,7 @@ impl PluginHub for MyPluginHub {
         let request = request.into_inner();
         let reply = self.generate_download_url(request)?;
         Ok(abi::DownloadTarResponse::success_response(Some(
-            abi::download_tar_response::DownloadTarData {
+            abi::DownloadTarData {
                 download_url: reply,
             },
         )))

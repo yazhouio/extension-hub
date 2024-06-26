@@ -28,6 +28,14 @@ pub enum HubError {
     #[error(transparent)]
     OtherError(#[from] anyhow::Error), // 1007
 
+    #[error(
+        "The hash of the file does not match the hash in the request, expected: {0},  found: {1}"
+    )]
+    HashNotMatch(String, String), // 1008
+
+    #[error("Resource not found")]
+    ResourceNotFount, // 1009
+
     // detailed errors
     #[error("Unsupported API: {0}")]
     UnsupportedApi(String), // 1100
@@ -54,6 +62,8 @@ pub enum HubErrorCode {
     DirHasExist = 1005,
     IOError = 1006,
     OtherError = 1007,
+    HashNotMatch = 1008,
+    ResourceNotFount = 1009,
     UnsupportedApi = 1100,
     MalformedApiResponse = 1101,
     UnSupportedErrorCode = 1102,
@@ -72,6 +82,8 @@ impl From<&HubError> for i32 {
             HubError::DirHasExist(_) => 1005_i32,
             HubError::IOError(_) => 1006_i32,
             HubError::OtherError(_) => 1007_i32,
+            HubError::HashNotMatch(_, _) => 1008_i32,
+            HubError::ResourceNotFount => 1009_i32,
             HubError::UnsupportedApi(_) => 1100_i32,
             HubError::MalformedApiResponse(_) => 1101_i32,
             HubError::UnSupportedErrorCode => 1102_i32,
@@ -108,6 +120,8 @@ impl TryFrom<&[u8]> for HubErrorCode {
             1005 => Ok(HubErrorCode::DirHasExist),
             1006 => Ok(HubErrorCode::IOError),
             1007 => Ok(HubErrorCode::OtherError),
+            1008 => Ok(HubErrorCode::HashNotMatch),
+            1009 => Ok(HubErrorCode::ResourceNotFount),
             1100 => Ok(HubErrorCode::UnsupportedApi),
             1101 => Ok(HubErrorCode::MalformedApiResponse),
             1102 => Ok(HubErrorCode::UnSupportedErrorCode),
@@ -153,63 +167,14 @@ impl From<HubError> for Status {
                 Status::invalid_argument(format!("Directory '{}' has exist", dir))
             }
             HubError::UnSupportedErrorCode => Status::internal("Unsupported error code"),
+            HubError::HashNotMatch(expected, found) => Status::invalid_argument(
+                 format!(
+                    "The hash of the file does not match the hash in the request, expected: {expected},  found: {found}",
+                 )
+            ),
+            HubError::ResourceNotFount => Status::not_found("Resource not found"),
         };
         let status = Status::with_details(status.code(), status.message(), bytes.into());
         status
     }
 }
-
-// impl From<HubError> for abi::AppError {
-//     fn from(value: HubError) -> Self {
-//         match value {
-//             HubError::ConfigNotExist => abi::AppError {
-//                 code: abi::AppErrorCode::ConfigNotExist.into(),
-//                 message: Some("Can not found the config".to_string()),
-//             },
-//             HubError::TarNotExist(hash) => abi::AppError {
-//                 code: abi::AppErrorCode::TarNotExist.into(),
-//                 message: Some(format!("Tar package with hash '{}' not exist", hash)),
-//             },
-//             HubError::FileNotExist(file) => abi::AppError {
-//                 code: abi::AppErrorCode::FileNotExist.into(),
-//                 message: Some(format!("File '{}' not exist", file)),
-//             },
-//             HubError::DirNotExist(dir) => abi::AppError {
-//                 code: abi::AppErrorCode::DirNotExist.into(),
-//                 message: Some(format!("Directory '{}' not exist", dir)),
-//             },
-//             HubError::ConfigureError(msg) => abi::AppError {
-//                 code: abi::AppErrorCode::ConfigureError.into(),
-//                 message: Some(format!("Configure error: {}", msg)),
-//             },
-//             HubError::IOError(msg) => abi::AppError {
-//                 code: abi::AppErrorCode::IoError.into(),
-//                 message: Some(format!("IO error: {}", msg)),
-//             },
-//             HubError::UnsupportedApi(api) => abi::AppError {
-//                 code: abi::AppErrorCode::UnsupportedApi.into(),
-//                 message: Some(format!("Unsupported API: {}", api)),
-//             },
-//             HubError::MalformedApiResponse(api) => abi::AppError {
-//                 code: abi::AppErrorCode::MalformedApiResponse.into(),
-//                 message: Some(format!("Malformed API response for {}", api)),
-//             },
-//             HubError::ProstDecodeError(err) => abi::AppError {
-//                 code: abi::AppErrorCode::ProstDecodeError.into(),
-//                 message: Some(format!("Protobuf decode error: {}", err)),
-//             },
-//             HubError::ProstEncodeError(err) => abi::AppError {
-//                 code: abi::AppErrorCode::ProstEncodeError.into(),
-//                 message: Some(format!("Protobuf encode error: {}", err)),
-//             },
-//             HubError::OtherError(err) => abi::AppError {
-//                 code: abi::AppErrorCode::Other.into(),
-//                 message: Some(format!("Other error: {}", err)),
-//             },
-//             HubError::DirHasExist(dir) => abi::AppError {
-//                 code: abi::AppErrorCode::DirHasExist.into(),
-//                 message: Some(format!("Directory '{}' has exist", dir)),
-//             },
-//         }
-//     }
-// }
