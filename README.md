@@ -1,5 +1,7 @@
 # ~~plugin-hub~~
 
+~~静态文件注册中心，适用于 k8s。使用一次性 job，代替常驻 nginx。可减少 pod 数量，提高观感。~~
+
 ## kubesphere 暂未支持第三方 api 调用。项目暂停开发。
 
 <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
