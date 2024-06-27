@@ -1,4 +1,40 @@
-# plugin-hub
+# ~~plugin-hub~~
+
+## kubesphere 暂未支持第三方 api 调用。项目暂停开发。
+
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 分为服务端和客户端，分别负责文件的发送和接收。
 ![image](https://github.com/yazhouio/plugin-hub/assets/17949154/72e2d576-1921-4305-87eb-56dc2e596227)
