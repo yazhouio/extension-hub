@@ -9,13 +9,15 @@ use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use std::io::Read;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::result::Result::Ok;
 use std::sync::Arc;
 use tar::Archive;
 use tokio::time::{sleep, Duration};
 use tonic::{Request, Response, Status};
 use tracing::debug;
+
+use crate::file::path_is_valid;
 
 extern crate plugin_hub;
 
@@ -53,6 +55,7 @@ impl MyPluginHub {
     pub fn get_tar_hash(&self, tar_hash: &str) -> Result<String, HubError> {
         if self.context.tar_set.contains(tar_hash) {
             let tar_file = format!("{}.tar.gz", tar_hash);
+            path_is_valid(&tar_file)?;
             let path = self.config.tar_dir_path.join(&tar_file);
             if path.exists() {
                 return Ok(tar_hash.to_owned());
@@ -71,6 +74,7 @@ impl MyPluginHub {
                 .ok_or(HubError::DirNotExist(file_name.to_owned()))?;
             if set.contains(item_dir) {
                 let path = self.config.base_dir.join(item_dir);
+                path_is_valid(&item_dir)?;
                 if path.exists() && path.is_dir() {
                     return Ok(());
                 }
@@ -131,16 +135,14 @@ impl MyPluginHub {
         item_dir: &str,
         overwrite: bool,
     ) -> Result<(), HubError> {
-        debug!(
-            "un_tar_to_dir: tar_hash={}, item_dir={}, overwrite={}",
-            tar_hash, item_dir, overwrite
-        );
+        path_is_valid(item_dir)?;
         let path = self.config.base_dir.join(item_dir);
         if path.exists() && !overwrite {
             return Err(HubError::DirHasExist(item_dir.to_owned()));
         };
         let mut file_name = self.get_tar_hash(tar_hash)?;
         file_name.push_str(".tar.gz");
+        path_is_valid(&file_name)?;
         let tar_gz = std::fs::File::open(self.config.tar_dir_path.join(&file_name))?;
 
         let tar: GzDecoder<_> = GzDecoder::new(tar_gz);
@@ -229,12 +231,42 @@ impl MyPluginHub {
         .await
     }
 
-    pub fn download_tar(&self, hash: &str) -> Result<(String, Vec<u8>), HubError> {
-        let Some(_request) = self.context.download_path_map.get(hash) else {
+    pub async fn upload_tar_by_path(
+        &self,
+        hash: &str,
+        path: impl AsRef<Path>,
+        target_path: impl AsRef<Path>,
+    ) -> Result<(), HubError> {
+        let Some(_request) = self.context.upload_path_map.get(hash) else {
+            return Err(HubError::ResourceNotFount);
+        };
+        let target_path = target_path.as_ref();
+        let path = path.as_ref();
+        let bytes = tokio::fs::read(&path).await?;
+        let request = _request.clone();
+        let hasher = blake3::hash(&bytes);
+        let hash_str = hasher.to_hex().to_string();
+        if hash_str != request.clone().tar_hash {
+            return Err(HubError::HashNotMatch(request.clone().tar_hash, hash_str));
+        };
+        std::fs::rename(&path, target_path).map_err(|e| {
+            debug!(
+                "Got error: {:?}, when move file {:?} to {:?}",
+                e, &path, &target_path
+            );
+            HubError::IOError(e)
+        })?;
+        self.upload_tar(hash, &bytes).await?;
+        Ok(())
+    }
+
+    pub fn download_tar(&self, url: &str) -> Result<(String, Vec<u8>), HubError> {
+        let Some(_request) = self.context.download_path_map.get(url) else {
             return Err(HubError::ResourceNotFount);
         };
         let request = _request.clone();
         let tar_file_name = format!("{}.tar.gz", request.clone().tar_hash);
+        path_is_valid(&tar_file_name)?;
         let path = self.config.tar_dir_path.join(tar_file_name);
         if !path.exists() {
             return Err(HubError::TarNotExist(request.clone().tar_hash));
@@ -243,6 +275,20 @@ impl MyPluginHub {
         let mut bytes = Vec::new();
         file.read_to_end(&mut bytes)?;
         Ok((request.clone().tar_hash, bytes))
+    }
+
+    pub fn get_download_tar_path(&self, url: &str) -> Result<(String, String), HubError> {
+        let Some(_request) = self.context.download_path_map.get(url) else {
+            return Err(HubError::ResourceNotFount);
+        };
+        let request = _request.clone();
+        let tar_file_name = format!("{}.tar.gz", request.clone().tar_hash);
+        path_is_valid(&tar_file_name)?;
+        let path = self.config.tar_dir_path.join(tar_file_name);
+        if !path.exists() {
+            return Err(HubError::TarNotExist(request.clone().tar_hash));
+        };
+        Ok((request.clone().tar_hash, path.to_string_lossy().to_string()))
     }
 }
 

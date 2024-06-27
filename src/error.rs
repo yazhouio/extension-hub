@@ -36,6 +36,9 @@ pub enum HubError {
     #[error("Resource not found")]
     ResourceNotFount, // 1009
 
+    #[error("Invalid path: {0}")]
+    InvalidPath(String), // 1100
+
     // detailed errors
     #[error("Unsupported API: {0}")]
     UnsupportedApi(String), // 1100
@@ -64,6 +67,7 @@ pub enum HubErrorCode {
     OtherError = 1007,
     HashNotMatch = 1008,
     ResourceNotFount = 1009,
+    InvalidPath = 1010,
     UnsupportedApi = 1100,
     MalformedApiResponse = 1101,
     UnSupportedErrorCode = 1102,
@@ -84,6 +88,7 @@ impl From<&HubError> for i32 {
             HubError::OtherError(_) => 1007_i32,
             HubError::HashNotMatch(_, _) => 1008_i32,
             HubError::ResourceNotFount => 1009_i32,
+            HubError::InvalidPath(_) => 1010_i32,
             HubError::UnsupportedApi(_) => 1100_i32,
             HubError::MalformedApiResponse(_) => 1101_i32,
             HubError::UnSupportedErrorCode => 1102_i32,
@@ -122,6 +127,7 @@ impl TryFrom<&[u8]> for HubErrorCode {
             1007 => Ok(HubErrorCode::OtherError),
             1008 => Ok(HubErrorCode::HashNotMatch),
             1009 => Ok(HubErrorCode::ResourceNotFount),
+            1010 => Ok(HubErrorCode::InvalidPath),
             1100 => Ok(HubErrorCode::UnsupportedApi),
             1101 => Ok(HubErrorCode::MalformedApiResponse),
             1102 => Ok(HubErrorCode::UnSupportedErrorCode),
@@ -173,6 +179,7 @@ impl From<HubError> for Status {
                  )
             ),
             HubError::ResourceNotFount => Status::not_found("Resource not found"),
+            HubError::InvalidPath(path) => Status::invalid_argument(format!("Invalid path: {}", path)),
         };
         let status = Status::with_details(status.code(), status.message(), bytes.into());
         status
