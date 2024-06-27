@@ -1,41 +1,6 @@
-# ~~plugin-hub~~
+# plugin-hub
 
-~~静态文件注册中心，适用于 k8s。使用一个 nginx和多个一次性 job，代替多个常驻 nginx。可减少 pod 数量，仅提高观感。~~
-
-## kubesphere 暂未支持第三方 api 调用。项目暂停开发。
-
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+静态文件注册中心，适用于 k8s。使用一个 nginx 和多个一次性 job，代替多个常驻 nginx。可减少 pod 数量，提高观感。
 
 
 分为服务端和客户端，分别负责文件的发送和接收。
@@ -57,4 +22,10 @@
 | <ul><li>- [ ] </li></ul> | 未使用文件清理｜ grpc ｜
 
 ## TODO: server 额外功能（待定）
-在 server 启动时，调用 ks 接口，重启所有 client，注册文件。
+~~在 server 启动时，调用 ks 接口，重启所有 client，注册文件。~~ 使用持久化存储，忽略重启问题
+
+## TODO: client 开发
+## TODO：文档支持
+## TODO：发布 kubesphere 插件
+    * file server 插件
+    * client 镜像
