@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-anyhow = "1.0.86"
+anyhow = "1.0"
 axum = { version = "0.7.5", features = ["http2", "tokio", "multipart"] }
 blake3 = "1.5.1"
 bytes = "1.6.0"
