@@ -1,4 +1,5 @@
 use anyhow::Result;
+use clap::Parser;
 use dashmap::{DashMap, DashSet};
 use flate2::read::GzDecoder;
 use plugin_hub::error::HubError;
@@ -7,6 +8,7 @@ use plugin_hub::text_replace;
 use plugin_hub::{abi::plugin_hub as abi, abi::plugin_hub::plugin_hub_server::PluginHub};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use serde::{Deserialize, Serialize};
 use std::io::Read;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -21,10 +23,21 @@ use crate::file::path_is_valid;
 
 extern crate plugin_hub;
 
-#[derive(Debug)]
+#[derive(Parser, Debug, Serialize, Deserialize, Clone)]
 pub struct MyPluginHubConfig {
+    #[arg(short, long)]
     pub base_dir: PathBuf,
+    #[arg(short, long)]
     pub tar_dir_path: PathBuf,
+}
+
+impl MyPluginHubConfig {
+    pub fn new(base_dir: impl Into<PathBuf>, tar_dir_path: impl Into<PathBuf>) -> Self {
+        MyPluginHubConfig {
+            base_dir: base_dir.into(),
+            tar_dir_path: tar_dir_path.into(),
+        }
+    }
 }
 
 impl Default for MyPluginHubConfig {
@@ -52,6 +65,12 @@ pub struct MyPluginHub {
 }
 
 impl MyPluginHub {
+    pub fn new(config: MyPluginHubConfig) -> Self {
+        MyPluginHub {
+            config,
+            context: MyPluginHubContext::default(),
+        }
+    }
     pub fn get_tar_hash(&self, tar_hash: &str) -> Result<String, HubError> {
         if self.context.tar_set.contains(tar_hash) {
             let tar_file = format!("{}.tar.gz", tar_hash);
@@ -74,7 +93,7 @@ impl MyPluginHub {
                 .ok_or(HubError::DirNotExist(file_name.to_owned()))?;
             if set.contains(item_dir) {
                 let path = self.config.base_dir.join(item_dir);
-                path_is_valid(&item_dir)?;
+                path_is_valid(item_dir)?;
                 if path.exists() && path.is_dir() {
                     return Ok(());
                 }
