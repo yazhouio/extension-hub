@@ -3,9 +3,9 @@ use std::sync::Arc;
 use axum::{handler::HandlerWithoutStateExt, http::StatusCode, Router};
 use tower_http::services::ServeDir;
 
-use crate::server::MyPluginHub;
+use crate::server::MyExtensionHub;
 
-pub fn wrap_files_router(state: Arc<MyPluginHub>, router: Router) -> Router {
+pub fn wrap_files_router(state: Arc<MyExtensionHub>, router: Router) -> Router {
     async fn handle_404() -> (StatusCode, &'static str) {
         (StatusCode::NOT_FOUND, "Not found")
     }

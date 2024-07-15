@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
 use crate::file::{path_is_valid, stream_to_file};
-use crate::server::MyPluginHub;
+use crate::server::MyExtensionHub;
 
 use axum::extract::DefaultBodyLimit;
 use futures::TryStreamExt;
-use plugin_hub::error::HubError;
+use extension_hub::error::HubError;
 
 use axum::{
     body::Body,
@@ -22,7 +22,7 @@ use tokio_util::io::ReaderStream;
 use tower_http::limit::RequestBodyLimitLayer;
 
 async fn upload(
-    State(state): State<Arc<MyPluginHub>>,
+    State(state): State<Arc<MyExtensionHub>>,
     Path(hash): Path<String>,
     mut multipart: Multipart,
 ) -> Result<(), StatusCode> {
@@ -85,7 +85,7 @@ async fn upload(
 }
 
 async fn download(
-    State(state): State<Arc<MyPluginHub>>,
+    State(state): State<Arc<MyExtensionHub>>,
     Path(hash): Path<String>,
 ) -> impl IntoResponse {
     let (tar_hash, file) = match state.get_download_tar_path(&hash) {
@@ -117,7 +117,7 @@ async fn download(
     Ok((headers, body).into_response())
 }
 
-pub fn router(state: Arc<MyPluginHub>) -> Router {
+pub fn router(state: Arc<MyExtensionHub>) -> Router {
     Router::new()
         .route("/version", get(|| async { "0.1.0" }))
         .route("/file/:hash", get(download))

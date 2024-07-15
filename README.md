@@ -1,13 +1,13 @@
-# plugin-hub
+# extension-hub
 
 静态文件注册中心，适用于 k8s。使用一个 nginx 和多个一次性 job，代替多个常驻 nginx。可减少 pod 数量，提高观感。
 
 
 分为服务端和客户端，分别负责文件的发送和接收。
-![image](https://github.com/yazhouio/plugin-hub/assets/17949154/72e2d576-1921-4305-87eb-56dc2e596227)
+![image](https://github.com/yazhouio/extension-hub/assets/17949154/72e2d576-1921-4305-87eb-56dc2e596227)
 
 大体流程如图。
-![image](https://github.com/yazhouio/plugin-hub/assets/17949154/e1b30011-6bcb-430f-8d08-3c365bb22ec5)
+![image](https://github.com/yazhouio/extension-hub/assets/17949154/e1b30011-6bcb-430f-8d08-3c365bb22ec5)
 
 
 ### server 提供功能

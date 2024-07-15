@@ -1,4 +1,4 @@
-pub use crate::abi::plugin_hub::*;
+pub use crate::abi::extension_hub::*;
 
 #[macro_export]
 macro_rules! response_new {

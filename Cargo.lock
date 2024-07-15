@@ -439,6 +439,40 @@ dependencies = [
 ]
 
 [[package]]
+name = "extension_hub"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "blake3",
+ "bytes",
+ "clap",
+ "dashmap",
+ "figment",
+ "flate2",
+ "futures",
+ "globset",
+ "prost",
+ "rand",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "tar",
+ "tempfile",
+ "thiserror",
+ "tokio",
+ "tokio-util",
+ "tonic",
+ "tonic-build",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "walkdir",
+]
+
+[[package]]
 name = "fastrand"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1220,40 +1254,6 @@ name = "pkg-config"
 version = "0.3.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d231b230927b5e4ad203db57bbcbee2802f6bce620b1e4a9024a07d94e2907ec"
-
-[[package]]
-name = "plugin_hub"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "blake3",
- "bytes",
- "clap",
- "dashmap",
- "figment",
- "flate2",
- "futures",
- "globset",
- "prost",
- "rand",
- "reqwest",
- "serde",
- "serde_json",
- "shellexpand",
- "tar",
- "tempfile",
- "thiserror",
- "tokio",
- "tokio-util",
- "tonic",
- "tonic-build",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "walkdir",
-]
 
 [[package]]
 name = "ppv-lite86"

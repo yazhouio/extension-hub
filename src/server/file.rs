@@ -4,9 +4,9 @@ use std::path::{Path, PathBuf};
 use tokio::{fs, fs::File, io::BufWriter};
 use tokio_util::io::StreamReader;
 
-use plugin_hub::error::HubError;
+use extension_hub::error::HubError;
 
-extern crate plugin_hub;
+extern crate extension_hub;
 
 pub fn path_is_valid(path: impl AsRef<Path>) -> Result<(), HubError> {
     let path = path.as_ref();

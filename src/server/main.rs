@@ -2,8 +2,8 @@
 
 use std::{net::SocketAddr, sync::Arc};
 
-use plugin_hub::abi::plugin_hub::plugin_hub_server::PluginHubServer;
-use server::{MyPluginHub, MyPluginHubConfig};
+use extension_hub::abi::extension_hub::extension_hub_server::ExtensionHubServer;
+use server::{MyExtensionHub, MyExtensionHubConfig};
 
 use axum::Router;
 use clap::Parser;
@@ -16,7 +16,7 @@ use figment::{
 };
 use serde::{Deserialize, Serialize};
 
-extern crate plugin_hub;
+extern crate extension_hub;
 
 mod axum_handlers;
 mod file;
@@ -29,7 +29,7 @@ struct Config {
     #[arg(short, long, value_parser)]
     addr: SocketAddr,
     #[command(flatten)]
-    path_config: MyPluginHubConfig,
+    path_config: MyExtensionHubConfig,
 }
 
 impl Default for Config {
@@ -37,13 +37,13 @@ impl Default for Config {
         Figment::new()
             .join(Toml::file("server.toml"))
             .join(Toml::file(
-                shellexpand::tilde("~/.config/plugin_hub/server.toml").as_ref(),
+                shellexpand::tilde("~/.config/extension_hub/server.toml").as_ref(),
             ))
-            .join(Toml::file("/etc/plugin_hub/server.toml"))
+            .join(Toml::file("/etc/extension_hub/server.toml"))
             .extract()
             .unwrap_or(Config {
                 addr: "[::]:3000".parse().unwrap(),
-                path_config: MyPluginHubConfig::default(),
+                path_config: MyExtensionHubConfig::default(),
             })
     }
 }
@@ -60,12 +60,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let cli = Config::try_parse().unwrap_or_default();
 
     let listener = tokio::net::TcpListener::bind(cli.addr).await.unwrap();
-    let greeter = MyPluginHub::new(cli.path_config);
+    let greeter = MyExtensionHub::new(cli.path_config);
 
     let arc_greeter = Arc::new(greeter);
 
     let axum_routers = axum_handlers::router(arc_greeter.clone());
-    let svc = tonic::service::Routes::new(PluginHubServer::from_arc(arc_greeter.clone()));
+    let svc = tonic::service::Routes::new(ExtensionHubServer::from_arc(arc_greeter.clone()));
     // let serve_dir: ServeDir = ServeDir::new(&arc_greeter.config.base_dir);
 
     let app = Router::new().merge(axum_routers).merge(svc.into_router());

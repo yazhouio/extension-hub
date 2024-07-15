@@ -80,7 +80,7 @@ message ClearDirResponse {
     // AppError error = 1;
 }
 
-service PluginHub {
+service ExtensionHub {
     rpc CheckTar(CheckTarRequest) returns (CheckTarResponse) {};
     rpc UploadTar(UploadTarRequest) returns (UploadTarResponse) {};
     rpc DownloadTar(DownloadTarRequest) returns (DownloadTarResponse) {};

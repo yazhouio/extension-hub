@@ -1,7 +1,7 @@
 use crate::response_new;
-use plugin_hub::*;
+use extension_hub::*;
 
-pub mod plugin_hub {
+pub mod extension_hub {
     tonic::include_proto!("abi");
 }
 

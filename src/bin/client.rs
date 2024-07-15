@@ -2,12 +2,12 @@ use std::io::BufWriter;
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use abi::plugin_hub_client::PluginHubClient;
+use abi::extension_hub_client::ExtensionHubClient;
 use anyhow::{anyhow, Result};
 use clap::Parser;
 use flate2::write::GzEncoder;
 use flate2::Compression;
-use plugin_hub::error::HubErrorCode;
+use extension_hub::error::HubErrorCode;
 use reqwest::multipart::Part;
 
 pub mod abi {
@@ -40,7 +40,7 @@ impl Config {
 
     async fn upload_tar(
         &self,
-        client: &mut PluginHubClient<tonic::transport::Channel>,
+        client: &mut ExtensionHubClient<tonic::transport::Channel>,
         bytes: Arc<Vec<u8>>,
         hash: &str,
     ) -> Result<()> {
@@ -88,8 +88,8 @@ async fn main() -> Result<()> {
     };
 
     println!("Connected to server: {}", addr);
-    let mut client: PluginHubClient<tonic::transport::Channel> =
-        PluginHubClient::connect(addr).await?;
+    let mut client: ExtensionHubClient<tonic::transport::Channel> =
+        ExtensionHubClient::connect(addr).await?;
 
     let (file, hash) = cli.dir_to_tar_file()?;
     let file = Arc::new(file);

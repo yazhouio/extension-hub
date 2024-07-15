@@ -2,10 +2,10 @@ use anyhow::Result;
 use clap::Parser;
 use dashmap::{DashMap, DashSet};
 use flate2::read::GzDecoder;
-use plugin_hub::error::HubError;
-use plugin_hub::text_replace;
-// use plugin_hub::macros::AppError;
-use plugin_hub::{abi::plugin_hub as abi, abi::plugin_hub::plugin_hub_server::PluginHub};
+use extension_hub::error::HubError;
+use extension_hub::text_replace;
+// use extension_hub::macros::AppError;
+use extension_hub::{abi::extension_hub as abi, abi::extension_hub::extension_hub_server::ExtensionHub};
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
 use serde::{Deserialize, Serialize};
@@ -21,29 +21,29 @@ use tracing::debug;
 
 use crate::file::path_is_valid;
 
-extern crate plugin_hub;
+extern crate extension_hub;
 
 #[derive(Parser, Debug, Serialize, Deserialize, Clone)]
-pub struct MyPluginHubConfig {
+pub struct MyExtensionHubConfig {
     #[arg(short, long)]
     pub base_dir: PathBuf,
     #[arg(short, long)]
     pub tar_dir_path: PathBuf,
 }
 
-impl MyPluginHubConfig {
+impl MyExtensionHubConfig {
     pub fn new(base_dir: impl Into<PathBuf>, tar_dir_path: impl Into<PathBuf>) -> Self {
-        MyPluginHubConfig {
+        MyExtensionHubConfig {
             base_dir: base_dir.into(),
             tar_dir_path: tar_dir_path.into(),
         }
     }
 }
 
-impl Default for MyPluginHubConfig {
+impl Default for MyExtensionHubConfig {
     fn default() -> Self {
-        let path = PathBuf::from("/tmp/plugin_hub");
-        MyPluginHubConfig {
+        let path = PathBuf::from("/tmp/extension_hub");
+        MyExtensionHubConfig {
             base_dir: path.clone(),
             tar_dir_path: path.join("__tar"),
         }
@@ -51,7 +51,7 @@ impl Default for MyPluginHubConfig {
 }
 
 #[derive(Debug, Default)]
-pub struct MyPluginHubContext {
+pub struct MyExtensionHubContext {
     pub tar_set: DashSet<String>,
     pub item_dir_map: DashMap<String, DashSet<String>>,
     pub upload_path_map: Arc<DashMap<String, abi::UploadTarRequest>>,
@@ -59,16 +59,16 @@ pub struct MyPluginHubContext {
 }
 
 #[derive(Debug, Default)]
-pub struct MyPluginHub {
-    pub config: MyPluginHubConfig,
-    pub context: MyPluginHubContext,
+pub struct MyExtensionHub {
+    pub config: MyExtensionHubConfig,
+    pub context: MyExtensionHubContext,
 }
 
-impl MyPluginHub {
-    pub fn new(config: MyPluginHubConfig) -> Self {
-        MyPluginHub {
+impl MyExtensionHub {
+    pub fn new(config: MyExtensionHubConfig) -> Self {
+        MyExtensionHub {
             config,
-            context: MyPluginHubContext::default(),
+            context: MyExtensionHubContext::default(),
         }
     }
     pub fn get_tar_hash(&self, tar_hash: &str) -> Result<String, HubError> {
@@ -314,7 +314,7 @@ impl MyPluginHub {
 }
 
 #[tonic::async_trait]
-impl PluginHub for MyPluginHub {
+impl ExtensionHub for MyExtensionHub {
     async fn check_tar(
         &self,
         request: Request<abi::CheckTarRequest>,
