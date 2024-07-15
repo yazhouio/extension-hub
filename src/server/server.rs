@@ -79,6 +79,8 @@ impl MyPluginHub {
             if path.exists() {
                 return Ok(tar_hash.to_owned());
             };
+        } else {
+            self.context.item_dir_map.remove(tar_hash);
         }
         Err(HubError::TarNotExist(tar_hash.to_owned()))
     }

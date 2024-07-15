@@ -31,7 +31,7 @@ async fn upload(
         .upload_path_map
         .get(&hash)
         .ok_or(StatusCode::NOT_FOUND)?;
-    if state.context.tar_set.contains(&config.tar_hash) {
+    if state.get_tar_hash(&hash).is_ok() {
         if let Some(un_tar) = &config.un_tar {
             return state
                 .un_tar_to_dir(
@@ -119,7 +119,6 @@ async fn download(
 
 pub fn router(state: Arc<MyPluginHub>) -> Router {
     Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
         .route("/version", get(|| async { "0.1.0" }))
         .route("/file/:hash", get(download))
         .route("/file/:hash", post(upload))
