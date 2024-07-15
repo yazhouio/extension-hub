@@ -24,7 +24,7 @@
 ## TODO: server 额外功能（待定）
 ~~在 server 启动时，调用 ks 接口，重启所有 client，注册文件。~~ 使用持久化存储，忽略重启问题
 
-## TODO: client 开发
+## Done: client 开发
 ## TODO：文档支持
 ## TODO：发布 kubesphere 插件
     * file server 插件
