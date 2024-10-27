@@ -1,0 +1,27 @@
+# Config
+origin_dir = "your_origin_dir"
+
+# UploadConfig
+[upload_config]
+path_ignore_globs = ["*/target/**"]
+path_globs = ["*"]
+target_dir = "your_target_dir"
+
+# Server as Ssh
+[upload_config.server.ssh]
+endpoint = "your_endpoint"
+user = "your_user"
+key_file = "your_key_file"
+
+# Server as LocalFs (uncomment if needed, if has local_fs server, the ssh server, ssh server will be ignored)
+[upload_config.server.local_fs]
+path = "/tmp"
+
+# TextReplaceConfig
+[[text_replace_config]]
+items = [
+    { target = "ax", origin = "as" },
+    { target = "target_string2222222", origin = "origin_string2" },
+]
+path_ignore_globs = ["ignore_pattern3", "ignore_pattern4"]
+path_globs = ["*.log", "pattern4"]
